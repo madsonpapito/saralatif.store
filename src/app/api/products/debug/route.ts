@@ -44,7 +44,7 @@ export async function GET() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...format.headers,
+                    ...(format.headers as any),
                 } as HeadersInit,
                 body: JSON.stringify(requestBody),
             });
