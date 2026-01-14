@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
             }>;
 
             // Get shipping address from session
-            const shippingDetails = session.shipping_details;
+            const shippingDetails = (session as any).shipping_details;
             if (!shippingDetails?.address) {
                 console.error('No shipping address in session');
                 return NextResponse.json({ received: true });
