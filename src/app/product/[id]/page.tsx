@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import AddToCartButton from '@/components/AddToCartButton';
+import AddToCartButton, { BuyNowButton } from '@/components/AddToCartButton';
 import { getProductById, getProductVariants } from '@/lib/product-utils';
 import { Product } from '@/types';
 
