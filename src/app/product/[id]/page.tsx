@@ -77,8 +77,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                         key={variant.id}
                                         href={`/product/${variant.id}`}
                                         className={`px-4 py-2 border text-sm transition-colors duration-200 ${variant.id === product.id
-                                                ? 'border-gray-900 bg-gray-900 text-white'
-                                                : 'border-gray-300 text-gray-700 hover:border-gray-900'
+                                            ? 'border-gray-900 bg-gray-900 text-white'
+                                            : 'border-gray-300 text-gray-700 hover:border-gray-900'
                                             }`}
                                     >
                                         {variant.creativeHubSettings.size}
@@ -88,7 +88,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                         </div>
                     )}
 
-                    <AddToCartButton product={product} />
+                    <div className="flex flex-col gap-3">
+                        <AddToCartButton product={product} />
+                        <BuyNowButton product={product} />
+                    </div>
 
                     {/* Product Details */}
                     <div className="mt-12 pt-8 border-t border-gray-100">

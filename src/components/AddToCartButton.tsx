@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { Product } from '@/types';
+import { useRouter } from 'next/navigation';
 
 interface AddToCartButtonProps {
     product: Product;
@@ -24,10 +25,10 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
             disabled={isAdded}
             className={`
         w-full py-4 px-8 text-sm tracking-wider uppercase font-medium
-        transition-all duration-300
+        transition-all duration-300 border border-gray-900
         ${isAdded
-                    ? 'bg-green-600 text-white cursor-default'
-                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                    ? 'bg-green-600 text-white border-green-600 cursor-default'
+                    : 'bg-white text-gray-900 hover:bg-gray-50'
                 }
       `}
         >
@@ -41,6 +42,30 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
             ) : (
                 'Add to Cart'
             )}
+        </button>
+    );
+}
+
+export function BuyNowButton({ product }: AddToCartButtonProps) {
+    const { addItem } = useCart();
+    const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleClick = async () => {
+        setIsLoading(true);
+        addItem(product);
+        // Small delay to ensure state update if needed, but usually instant.
+        // Redirect to cart/checkout
+        router.push('/cart');
+    };
+
+    return (
+        <button
+            onClick={handleClick}
+            disabled={isLoading}
+            className="w-full py-4 px-8 text-sm tracking-wider uppercase font-medium transition-all duration-300 bg-gray-900 text-white hover:bg-gray-800 border border-gray-900"
+        >
+            {isLoading ? 'Processing...' : 'Checkout'}
         </button>
     );
 }
