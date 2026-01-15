@@ -1,25 +1,11 @@
 import ProductCard from '@/components/ProductCard';
-import { products as staticProducts } from '@/data/products';
-import { Product } from '@/types';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
-
-// Load products from static file (Source of Truth)
-function getProducts(): Product[] {
-  // Prepend base URL to images if not present
-  const BASE_IMAGE_URL = 'https://app.creativehub.io/file-preview/api/file/pshubcontainer/';
-
-  return staticProducts.map(product => ({
-    ...product,
-    image: product.image.startsWith('http') ? product.image : `${BASE_IMAGE_URL}${product.image}`
-  }));
-}
+import { getUniqueProducts } from '@/lib/product-utils';
 
 export const dynamic = 'force-dynamic';
 
 export default function Home() {
-  const allProducts = getProducts();
-  // Display only first 6 products
+  const allProducts = getUniqueProducts();
+  // Display only first 6 products (unique artworks)
   const products = allProducts.slice(0, 6);
 
   return (

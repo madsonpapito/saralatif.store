@@ -1,31 +1,8 @@
 import Image from 'next/image';
-import { notFound, redirect } from 'next/navigation';
-import { products as staticProducts, getProductById as getStaticProductById } from '@/data/products';
+import { notFound } from 'next/navigation';
 import AddToCartButton from '@/components/AddToCartButton';
+import { getProductById, getProductVariants } from '@/lib/product-utils';
 import { Product } from '@/types';
-
-// Source of Truth with Image Fix
-function getProducts(): Product[] {
-    const BASE_IMAGE_URL = 'https://app.creativehub.io/file-preview/api/file/pshubcontainer/';
-    return staticProducts.map(product => ({
-        ...product,
-        image: product.image.startsWith('http') ? product.image : `${BASE_IMAGE_URL}${product.image}`
-    }));
-}
-
-function getProductById(id: string): Product | undefined {
-    const products = getProducts();
-    return products.find(p => p.id === id);
-}
-
-function getProductVariants(product: Product): Product[] {
-    if (!product.creativeHubProductId) return [];
-    const products = getProducts();
-    return products.filter(p =>
-        p.creativeHubProductId === product.creativeHubProductId &&
-        p.id !== product.id
-    ).sort((a, b) => a.price - b.price);
-}
 
 interface ProductPageProps {
     params: Promise<{ id: string }>;
