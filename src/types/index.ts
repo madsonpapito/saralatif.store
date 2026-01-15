@@ -53,6 +53,7 @@ export interface CreativeHubOrderItem {
 
 export interface CreativeHubOrder {
   ExternalRef: string;
+  Email?: string; // Adding Email just in case
   ShippingAddress: {
     FirstName: string;
     LastName: string;
@@ -61,7 +62,7 @@ export interface CreativeHubOrder {
     City: string;
     State?: string;
     PostCode: string;
-    Country: string;
+    CountryCode: string; // Changed from Country
   };
   Items: CreativeHubOrderItem[];
 }

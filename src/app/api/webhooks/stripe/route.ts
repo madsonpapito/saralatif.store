@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
             // Build CreativeHub order
             const creativeHubOrder: CreativeHubOrder = {
                 ExternalRef: session.id,
+                Email: session.customer_details?.email || undefined,
                 ShippingAddress: {
                     FirstName: firstName,
                     LastName: lastName,
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
                     City: address.city || '',
                     State: address.state || undefined,
                     PostCode: address.postal_code || '',
-                    Country: address.country || 'PT',
+                    CountryCode: address.country || 'PT', // Stripe gives ISO 2 char, safe to pass
                 },
                 Items: cartItems.map((item) => {
                     // Prefer ID-based ordering if available
