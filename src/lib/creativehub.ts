@@ -14,18 +14,19 @@ export async function createOrder(order: CreativeHubOrder): Promise<{ success: b
         return { success: false, error: 'CreativeHub API key not configured' };
     }
 
-    // Try with Bearer prefix first, then without if that fails
+    // Try valid auth formats based on documentation
     const authFormats = [
-        `Bearer ${CREATIVEHUB_API_KEY}`,
-        CREATIVEHUB_API_KEY,
         `ApiKey ${CREATIVEHUB_API_KEY}`,
+        CREATIVEHUB_API_KEY,
+        `Bearer ${CREATIVEHUB_API_KEY}`
     ];
 
     for (const authHeader of authFormats) {
         try {
-            console.log(`🔄 Trying auth format: ${authHeader.substring(0, 20)}...`);
+            console.log(`🔄 Trying auth format: ${authHeader.substring(0, 10)}...`);
 
-            const requestUrl = `${CREATIVEHUB_API_URL}/api/v1/orders`;
+            // Correct endpoint for confirmed orders
+            const requestUrl = `${CREATIVEHUB_API_URL}/api/v1/orders/confirmed`;
             console.log('Request URL:', requestUrl);
 
             const response = await fetch(requestUrl, {
