@@ -1,5 +1,17 @@
 {
     "framework": "nextjs",
     "buildCommand": "next build",
-    "installCommand": "npm install"
+    "installCommand": "npm install",
+    "trailingSlash": false,
+    "headers": [
+        {
+            "source": "/api/webhooks/stripe",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-store"
+                }
+            ]
+        }
+    ]
 }

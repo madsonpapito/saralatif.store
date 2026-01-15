@@ -5,7 +5,21 @@ import { stripe } from '@/lib/stripe';
 import { createOrder } from '@/lib/creativehub';
 import { CreativeHubOrder } from '@/types';
 
+// Force dynamic to prevent caching issues
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+// GET handler for testing if the route is accessible
+export async function GET() {
+    return NextResponse.json({
+        status: 'ok',
+        message: 'Stripe webhook endpoint is active',
+        timestamp: new Date().toISOString()
+    });
+}
+
 
 export async function POST(request: NextRequest) {
     if (!webhookSecret) {
