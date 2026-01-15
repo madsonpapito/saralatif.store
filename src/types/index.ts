@@ -45,27 +45,23 @@ export interface ShippingAddress {
 }
 
 export interface CreativeHubOrderItem {
-  external_sku?: string;
-  product_id?: number;
-  print_option_id?: number;
-  quantity: number;
-  attributes: {
-    paper: string;
-    size: string;
-  };
+  ExternalSku?: string;
+  ProductId?: number;
+  PrintOptionId?: number;
+  Quantity: number;
 }
 
 export interface CreativeHubOrder {
-  external_ref: string;
-  shipping_address: {
-    first_name: string;
-    last_name: string;
-    line1: string;
-    line2?: string;
-    city: string;
-    state?: string;
-    postal_code: string;
-    country: string;
+  ExternalRef: string;
+  ShippingAddress: {
+    FirstName: string;
+    LastName: string;
+    Line1: string;
+    Line2?: string;
+    City: string;
+    State?: string;
+    PostCode: string;
+    Country: string;
   };
-  items: CreativeHubOrderItem[];
+  Items: CreativeHubOrderItem[];
 }

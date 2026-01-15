@@ -96,38 +96,30 @@ export async function POST(request: NextRequest) {
 
             // Build CreativeHub order
             const creativeHubOrder: CreativeHubOrder = {
-                external_ref: session.id,
-                shipping_address: {
-                    first_name: firstName,
-                    last_name: lastName,
-                    line1: address.line1 || '',
-                    line2: address.line2 || undefined,
-                    city: address.city || '',
-                    state: address.state || undefined,
-                    postal_code: address.postal_code || '',
-                    country: address.country || 'PT',
+                ExternalRef: session.id,
+                ShippingAddress: {
+                    FirstName: firstName,
+                    LastName: lastName,
+                    Line1: address.line1 || '',
+                    Line2: address.line2 || undefined,
+                    City: address.city || '',
+                    State: address.state || undefined,
+                    PostCode: address.postal_code || '',
+                    Country: address.country || 'PT',
                 },
-                items: cartItems.map((item) => {
+                Items: cartItems.map((item) => {
                     // Prefer ID-based ordering if available
                     if (item.creativeHubProductId && item.creativeHubPrintOptionId) {
                         return {
-                            product_id: item.creativeHubProductId,
-                            print_option_id: item.creativeHubPrintOptionId,
-                            quantity: item.quantity,
-                            attributes: {
-                                paper: item.paper,
-                                size: item.size,
-                            }
+                            ProductId: item.creativeHubProductId,
+                            PrintOptionId: item.creativeHubPrintOptionId,
+                            Quantity: item.quantity
                         };
                     }
-                    // Fallback to SKU if IDs missing (should not happen for synced products)
+                    // Fallback to SKU
                     return {
-                        external_sku: item.sku,
-                        quantity: item.quantity,
-                        attributes: {
-                            paper: item.paper,
-                            size: item.size,
-                        },
+                        ExternalSku: item.sku,
+                        Quantity: item.quantity
                     };
                 }),
             };
