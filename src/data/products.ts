@@ -923,7 +923,7 @@ export const products: Product[] = [
         "editionsSold": 0,
         "hasFrame": false,
         "costPerItem": 0,
-        "artistName": null
+        "artistName": ""
     },
     {
         "id": "ch-7647299-2437850",
@@ -946,7 +946,7 @@ export const products: Product[] = [
         "editionsSold": 0,
         "hasFrame": false,
         "costPerItem": 0,
-        "artistName": null
+        "artistName": ""
     },
     {
         "id": "ch-7647299-2437851",
@@ -969,7 +969,7 @@ export const products: Product[] = [
         "editionsSold": 0,
         "hasFrame": false,
         "costPerItem": 0,
-        "artistName": null
+        "artistName": ""
     },
     {
         "id": "ch-7647301-2437852",

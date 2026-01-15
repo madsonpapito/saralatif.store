@@ -23,7 +23,7 @@ export interface Product {
   editionsSold?: number;
   hasFrame?: boolean;
   costPerItem?: number;
-  artistName?: string;
+  artistName?: string | null;
 }
 
 // Cart Types
