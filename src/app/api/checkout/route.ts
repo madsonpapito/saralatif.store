@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
                     }))
                 ),
             },
+            allow_promotion_codes: true, // Enable coupons (for testing/marketing)
         });
 
         return NextResponse.json({ url: session.url });
