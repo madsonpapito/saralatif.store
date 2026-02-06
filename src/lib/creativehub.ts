@@ -1,68 +1,111 @@
-import { CreativeHubOrder } from '@/types';
+import { CreativeHubOrder, EmbryonicOrderResponse, DeliveryOption, ConfirmedOrderPayload } from '@/types';
 
 const CREATIVEHUB_API_URL = process.env.CREATIVEHUB_API_URL || 'https://api.creativehub.io';
 const CREATIVEHUB_API_KEY = process.env.CREATIVEHUB_API_KEY;
 
-export async function createOrder(order: CreativeHubOrder): Promise<{ success: boolean; orderId?: string; error?: string }> {
-    console.log('=== CreativeHub Order Creation Started ===');
-    console.log('API URL:', CREATIVEHUB_API_URL);
-    console.log('API Key configured:', !!CREATIVEHUB_API_KEY);
-    console.log('Order payload:', JSON.stringify(order, null, 2));
-
+// Helper to handle Auth Headers and Retries
+async function creativeHubRequest<T>(endpoint: string, method: 'GET' | 'POST', body?: any): Promise<T> {
     if (!CREATIVEHUB_API_KEY) {
-        console.error('❌ CreativeHub API key not configured');
-        return { success: false, error: 'CreativeHub API key not configured' };
+        throw new Error('CreativeHub API key not configured');
     }
 
-    // Try valid auth formats based on documentation
     const authFormats = [
         `ApiKey ${CREATIVEHUB_API_KEY}`,
         CREATIVEHUB_API_KEY,
         `Bearer ${CREATIVEHUB_API_KEY}`
     ];
 
+    let lastError: string = 'Unknown error';
+
     for (const authHeader of authFormats) {
         try {
-            console.log(`🔄 Trying auth format: ${authHeader.substring(0, 10)}...`);
+            console.log(`🔌 Request: ${method} ${endpoint} (Auth: ${authHeader.substring(0, 10)}...)`);
 
-            // Correct endpoint for confirmed orders
-            const requestUrl = `${CREATIVEHUB_API_URL}/api/v1/orders/confirmed`;
-            console.log('Request URL:', requestUrl);
-
-            const response = await fetch(requestUrl, {
-                method: 'POST',
+            const response = await fetch(`${CREATIVEHUB_API_URL}${endpoint}`, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': authHeader,
                 },
-                body: JSON.stringify(order),
+                body: body ? JSON.stringify(body) : undefined,
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response headers:', JSON.stringify(Object.fromEntries(response.headers)));
-
             if (response.ok) {
-                const data = await response.json();
-                console.log('✅ CreativeHub order created successfully:', JSON.stringify(data, null, 2));
-                return { success: true, orderId: data.id || data.order_id || data.Id || data.OrderId };
+                return await response.json() as T;
             }
 
             const errorText = await response.text();
-            console.log(`❌ Auth format failed with status ${response.status}:`, errorText);
+            lastError = `Status ${response.status}: ${errorText}`;
+            console.warn(`⚠️ Request failed with ${authHeader.substring(0, 10)}...: ${lastError}`);
 
-            // If it's a 401/403, try next auth format
-            if (response.status === 401 || response.status === 403) {
-                continue;
+            // Only retry on Auth errors
+            if (response.status !== 401 && response.status !== 403) {
+                throw new Error(lastError);
             }
 
-            // For other errors, return immediately
-            return { success: false, error: `CreativeHub API error: ${response.status} - ${errorText}` };
-
-        } catch (error) {
-            console.error('❌ Network error with auth format:', error);
+        } catch (error: any) {
+            console.error('❌ Network/Auth error:', error);
+            lastError = error.message;
         }
     }
 
-    console.error('❌ All auth formats failed');
-    return { success: false, error: 'Failed to authenticate with CreativeHub - all auth formats failed' };
+    throw new Error(`All auth formats failed. Last error: ${lastError}`);
+}
+
+export async function createOrder(order: CreativeHubOrder): Promise<{ success: boolean; orderId?: string; error?: string }> {
+    console.log('=== 🚀 CreativeHub Order Flow Started (3-Step) ===');
+
+    try {
+        // STEP 1: Embryonic Order
+        console.log('📝 Step 1: Creating Embryonic Order...');
+        const embryonic = await creativeHubRequest<EmbryonicOrderResponse>(
+            '/api/v1/orders/embryonic',
+            'POST',
+            order
+        );
+
+        const orderId = embryonic.id || embryonic.Id;
+        if (!orderId) {
+            throw new Error(`Embryonic order created but no ID returned. Response: ${JSON.stringify(embryonic)}`);
+        }
+        console.log(`✅ Embryonic Order Created. ID: ${orderId}`);
+
+        // STEP 2: Delivery Options
+        console.log(`🚚 Step 2: Fetching Delivery Options for Order ${orderId}...`);
+        const deliveryOptions = await creativeHubRequest<DeliveryOption[]>(
+            `/api/v1/deliveryoptions/query?orderId=${orderId}`,
+            'GET'
+        );
+
+        if (!deliveryOptions || deliveryOptions.length === 0) {
+            throw new Error('No delivery options returned by CreativeHub.');
+        }
+
+        // Select the cheapest option (usually the first one, or specifically "Standard")
+        // Ensuring we pick a valid option
+        const selectedOption = deliveryOptions[0];
+        console.log(`✅ Delivery Option Selected: ${selectedOption.Description} (${selectedOption.Id}) - ${selectedOption.TotalAmount} ${selectedOption.Currency || ''}`);
+
+        // STEP 3: Confirm Order
+        console.log('🔒 Step 3: Confirming Order...');
+        const confirmPayload: ConfirmedOrderPayload = {
+            OrderId: typeof orderId === 'string' ? parseInt(orderId) : orderId,
+            DeliveryOptionId: selectedOption.Id,
+            DeliveryChargeExcludingSalesTax: selectedOption.Amount, // Optional but good practice
+            DeliveryChargeSalesTax: selectedOption.TaxAmount          // Optional but good practice
+        };
+
+        const confirmed = await creativeHubRequest<any>(
+            '/api/v1/orders/confirmed',
+            'POST',
+            confirmPayload
+        );
+
+        console.log('✅✅ ORDER CONFIRMED SUCCESSFULLY!');
+        return { success: true, orderId: orderId.toString() };
+
+    } catch (error: any) {
+        console.error('❌ CreativeHub Order Flow Failed:', error.message);
+        return { success: false, error: error.message };
+    }
 }

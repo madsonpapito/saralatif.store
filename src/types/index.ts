@@ -85,3 +85,28 @@ export interface CreativeHubOrder {
   };
   OrderItems: CreativeHubOrderItem[]; // Renamed from Items
 }
+
+// 3-Step Order Flow Types
+export interface EmbryonicOrderResponse {
+  id: number;
+  [key: string]: any;
+}
+
+export interface DeliveryOption {
+  Id: string;
+  Description: string;
+  Amount: number;
+  TaxAmount: number;
+  TotalAmount: number;
+  Carrier: string;
+  Service: string;
+  Currency?: string; // Added to fix lint error
+}
+
+export interface ConfirmedOrderPayload {
+  OrderId: number;
+  DeliveryOptionId: string;
+  DeliveryChargeExcludingSalesTax?: number;
+  DeliveryChargeSalesTax?: number;
+  ExternalReference?: string;
+}
