@@ -38,12 +38,16 @@ async function creativeHubRequest<T>(endpoint: string, method: 'GET' | 'POST', b
             lastError = `Status ${response.status}: ${errorText}`;
             console.warn(`⚠️ Request failed with ${authHeader.substring(0, 10)}...: ${lastError}`);
 
-            // Only retry on Auth errors
+            // If it's NOT an auth error (401/403), do not retry other formats. Fail immediately.
             if (response.status !== 401 && response.status !== 403) {
                 throw new Error(lastError);
             }
 
         } catch (error: any) {
+            // Rethrow if it's the specific error we just threw above (checking message matches lastError)
+            if (error.message === lastError) {
+                throw error;
+            }
             console.error('❌ Network/Auth error:', error);
             lastError = error.message;
         }

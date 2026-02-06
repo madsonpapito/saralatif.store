@@ -113,8 +113,9 @@ export async function POST(request: NextRequest) {
             console.log(`Resolving Country: ${countryCode} -> ID: ${countryId}`);
 
             // Build CreativeHub order
+            const uniqueSuffix = Math.random().toString(36).substring(7);
             const creativeHubOrder: CreativeHubOrder = {
-                ExternalRef: session.id,
+                ExternalRef: `${session.id}_${uniqueSuffix}`,
                 Email: session.customer_details?.email || undefined,
                 FirstName: firstName,
                 LastName: lastName,
