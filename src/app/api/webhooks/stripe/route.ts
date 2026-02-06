@@ -113,10 +113,10 @@ export async function POST(request: NextRequest) {
             console.log(`Resolving Country: ${countryCode} -> ID: ${countryId}`);
 
             // Build CreativeHub order
-            // Use PREFIX for uniqueness to avoid truncation issues (if DB limit is small)
-            const uniquePrefix = Math.floor(Math.random() * 10000);
+            // Use Short Random Ref to guarantee uniqueness and avoid DB truncation/duplication checks
+            const shortRef = `Retry-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
             const creativeHubOrder: CreativeHubOrder = {
-                ExternalRef: `r${uniquePrefix}_${session.id}`,
+                ExternalRef: shortRef,
                 Email: session.customer_details?.email || undefined,
                 FirstName: firstName,
                 LastName: lastName,
