@@ -86,26 +86,31 @@ export interface CreativeHubOrder {
   OrderItems: CreativeHubOrderItem[]; // Renamed from Items
 }
 
-// 3-Step Order Flow Types
+// 2-Step Order Flow Types (Embryonic -> Confirm)
 export interface EmbryonicOrderResponse {
-  id: number;
+  OrderId?: number;
+  Id?: number;
+  id?: number;
   [key: string]: any;
 }
 
 export interface DeliveryOption {
-  Id: string;
-  Description: string;
-  Amount: number;
-  TaxAmount: number;
-  TotalAmount: number;
-  Carrier: string;
-  Service: string;
-  Currency?: string; // Added to fix lint error
+  Id?: number;
+  DeliveryOptionId?: number;
+  Description?: string;
+  Amount?: number;
+  ChargeExcludingTax?: number;
+  TaxAmount?: number;
+  Tax?: number;
+  TotalAmount?: number;
+  Carrier?: string;
+  Service?: string;
+  Currency?: string;
 }
 
 export interface ConfirmedOrderPayload {
   OrderId: number;
-  DeliveryOptionId: string;
+  DeliveryOptionId: number;
   DeliveryChargeExcludingSalesTax?: number;
   DeliveryChargeSalesTax?: number;
   ExternalReference?: string;
