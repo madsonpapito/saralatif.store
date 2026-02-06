@@ -3,23 +3,9 @@ import { headers } from 'next/headers';
 import Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
 import { createOrder } from '@/lib/creativehub';
-import { CreativeHubOrder, CreativeHubOrderItem } from '@/types';
-
-// Force dynamic to prevent caching issues
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+import { CreativeHubOrder } from '@/types';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-// GET handler for testing if the route is accessible
-export async function GET() {
-    return NextResponse.json({
-        status: 'ok',
-        message: 'Stripe webhook endpoint is active',
-        timestamp: new Date().toISOString()
-    });
-}
-
 
 export async function POST(request: NextRequest) {
     if (!webhookSecret) {
@@ -57,18 +43,13 @@ export async function POST(request: NextRequest) {
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        console.log('=== Stripe Webhook: Checkout Session Completed ===');
-        console.log('Session ID:', session.id);
-        console.log('Session metadata:', JSON.stringify(session.metadata, null, 2));
-        console.log('Shipping details:', JSON.stringify((session as any).shipping_details, null, 2));
+        console.log('Checkout session completed:', session.id);
 
         try {
             // Parse cart items from metadata
             const cartItemsJson = session.metadata?.cartItems;
-            console.log('Cart items JSON:', cartItemsJson);
-
             if (!cartItemsJson) {
-                console.error('❌ No cart items in session metadata');
+                console.error('No cart items in session metadata');
                 return NextResponse.json({ received: true });
             }
 
@@ -76,14 +57,12 @@ export async function POST(request: NextRequest) {
                 productId: string;
                 quantity: number;
                 sku: string;
-                creativeHubProductId?: number;
-                creativeHubPrintOptionId?: number;
                 paper: string;
                 size: string;
             }>;
 
             // Get shipping address from session
-            const shippingDetails = (session as any).shipping_details;
+            const shippingDetails = session.shipping_details;
             if (!shippingDetails?.address) {
                 console.error('No shipping address in session');
                 return NextResponse.json({ received: true });
@@ -94,69 +73,27 @@ export async function POST(request: NextRequest) {
             const firstName = nameParts[0] || 'Customer';
             const lastName = nameParts.slice(1).join(' ') || '';
 
-            // Country Mapping (PT -> 177)
-            const COUNTRY_ID_MAP: Record<string, number> = {
-                'PT': 177, // Portugal
-                'US': 225, // United States
-                'GB': 224, // United Kingdom
-                'ES': 67,  // Spain
-                'FR': 73,  // France
-                'DE': 80,  // Germany
-                'IT': 105, // Italy
-                'BR': 30,  // Brazil
-                // Add more common countries if needed
-            };
-
-            const countryCode = address.country || 'PT';
-            const countryId = COUNTRY_ID_MAP[countryCode] || 177; // Default to PT for now or lookup
-
-            console.log(`Resolving Country: ${countryCode} -> ID: ${countryId}`);
-
             // Build CreativeHub order
-            // Use Short Random Ref to guarantee uniqueness and avoid DB truncation/duplication checks
-            const shortRef = `Retry-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
             const creativeHubOrder: CreativeHubOrder = {
-                ExternalRef: shortRef,
-                Email: session.customer_details?.email || undefined,
-                FirstName: firstName,
-                LastName: lastName,
-                ShippingAddress: {
-                    FirstName: firstName,
-                    LastName: lastName,
-                    Line1: address.line1 || '',
-                    Line2: address.line2 || undefined,
-                    City: address.city || '',
-                    State: address.state || undefined,
-                    PostCode: address.postal_code || '',
-                    CountryId: countryId,
-                    CountryCode: countryCode,
+                external_ref: session.id,
+                shipping_address: {
+                    first_name: firstName,
+                    last_name: lastName,
+                    line1: address.line1 || '',
+                    line2: address.line2 || undefined,
+                    city: address.city || '',
+                    state: address.state || undefined,
+                    postal_code: address.postal_code || '',
+                    country: address.country || 'PT',
                 },
-                BillingAddress: {
-                    FirstName: firstName,
-                    LastName: lastName,
-                    Line1: address.line1 || '',
-                    Line2: address.line2 || undefined,
-                    City: address.city || '',
-                    State: address.state || undefined,
-                    PostCode: address.postal_code || '',
-                    CountryId: countryId,
-                    CountryCode: countryCode,
-                },
-                OrderItems: cartItems.map((item) => {
-                    // ALWAYS include ExternalSku to prevent backend NullReferenceException
-                    const orderItem: CreativeHubOrderItem = {
-                        Quantity: item.quantity,
-                        ExternalSku: item.sku,
-                    };
-
-                    // Add IDs if available
-                    if (item.creativeHubProductId && item.creativeHubPrintOptionId) {
-                        orderItem.ProductId = item.creativeHubProductId;
-                        orderItem.PrintOptionId = item.creativeHubPrintOptionId;
-                    }
-
-                    return orderItem;
-                }),
+                items: cartItems.map((item) => ({
+                    external_sku: item.sku,
+                    quantity: item.quantity,
+                    attributes: {
+                        paper: item.paper,
+                        size: item.size,
+                    },
+                })),
             };
 
             console.log('Creating CreativeHub order:', JSON.stringify(creativeHubOrder, null, 2));
