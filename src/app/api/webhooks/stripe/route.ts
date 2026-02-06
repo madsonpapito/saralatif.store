@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
 import { createOrder } from '@/lib/creativehub';
-import { CreativeHubOrder } from '@/types';
+import { CreativeHubOrder, CreativeHubOrderItem } from '@/types';
 
 // Force dynamic to prevent caching issues
 export const dynamic = 'force-dynamic';
@@ -141,20 +141,19 @@ export async function POST(request: NextRequest) {
                     CountryCode: countryCode,
                 },
                 OrderItems: cartItems.map((item) => {
-                    // Prefer ID-based ordering if available
-                    if (item.creativeHubProductId && item.creativeHubPrintOptionId) {
-                        return {
-                            ProductId: item.creativeHubProductId,
-                            PrintOptionId: item.creativeHubPrintOptionId,
-                            Quantity: item.quantity
-                            // Attributes removed to avoid string mismatches (Implied by PrintOptionId)
-                        };
-                    }
-                    // Fallback to SKU
-                    return {
-                        ExternalSku: item.sku,
+                    // ALWAYS include ExternalSku to prevent backend NullReferenceException
+                    const orderItem: CreativeHubOrderItem = {
                         Quantity: item.quantity,
+                        ExternalSku: item.sku,
                     };
+
+                    // Add IDs if available
+                    if (item.creativeHubProductId && item.creativeHubPrintOptionId) {
+                        orderItem.ProductId = item.creativeHubProductId;
+                        orderItem.PrintOptionId = item.creativeHubPrintOptionId;
+                    }
+
+                    return orderItem;
                 }),
             };
 
